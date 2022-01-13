@@ -1,7 +1,7 @@
 use std::{
     collections::VecDeque,
     fs::File,
-    io::Read,
+    io::{Read, Write},
     ops::Range,
     sync::{Arc, Mutex},
     thread,
@@ -12,20 +12,14 @@ trait Document<'a>: Iterator {
     fn change(range: &Range<usize>, with: &str);
 }
 
-struct ConcurrentDocument {
-    queque: VecDeque<String>,
+struct ConcurrentDocument<'a> {
+    reader: &'a dyn Read,
+    writer: &'a dyn Write,
 }
-impl ConcurrentDocument {
-    pub fn new() -> Self {
-        Self {
-            queque: VecDeque::new(),
-        }
-    }
-    pub fn add(&mut self, text: String) {
-        self.queque.push_back(text);
-    }
-    pub fn iter(&self) -> std::collections::vec_deque::Iter<String> {
-        self.queque.iter()
+
+impl<'a> ConcurrentDocument<'a> {
+    pub fn new(reader: &'a mut dyn Read, writer: &'a mut dyn Write) -> Self {
+        Self { reader, writer }
     }
 }
 
@@ -38,7 +32,6 @@ fn main() {
         let handle = thread::spawn(move || {
             let mut doc = mutex.lock().expect("Failed to lock");
             let str = format!("Thread {}", j);
-            doc.add(String::from(str));
 
             thread::sleep(Duration::from_millis(100));
         });
@@ -47,9 +40,5 @@ fn main() {
 
     for handle in handles {
         handle.join().unwrap();
-    }
-
-    for x in arc.lock().unwrap().iter() {
-        println!("{}", x);
     }
 }
