@@ -97,9 +97,6 @@ fn main() {
         .expect("Failed to read file");
 
     let tree = build_tree(&file_content);
-    for node in &tree {
-        println!("{:?}", node);
-    }
     print_tree(&tree[0], &tree, 0);
 }
 #[cfg(test)]
