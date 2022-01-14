@@ -51,11 +51,13 @@ fn build_tree<'a>(text: &'a String) -> Vec<Node<'a>> {
         let index = node_index_queque.unwrap();
         let chars = nodes[index].text.unwrap();
 
-        let split = chars.split_at(chars.len() / 2);
+        let split_point = chars.len() / 2;
 
-        if split.0 == "" {
-            continue;
+        if split_point <= 1 {
+            break;
         }
+
+        let split = chars.split_at(split_point - 1);
 
         let length = nodes.len();
         nodes[index].left = Some(length);
@@ -67,7 +69,7 @@ fn build_tree<'a>(text: &'a String) -> Vec<Node<'a>> {
             right: None,
             parent: Some(index),
             text: Some(split.0),
-            weight: 0,
+            weight: split.0.len(),
         };
 
         queque.push_back(nodes.len());
@@ -78,7 +80,7 @@ fn build_tree<'a>(text: &'a String) -> Vec<Node<'a>> {
             right: None,
             parent: Some(index),
             text: Some(split.1),
-            weight: 0,
+            weight: split.1.len(),
         };
 
         queque.push_back(nodes.len());
@@ -88,8 +90,22 @@ fn build_tree<'a>(text: &'a String) -> Vec<Node<'a>> {
     nodes
 }
 
+fn index<'a>(node: &'a Node, i: usize, tree: &'a Vec<Node>) -> char {
+    if node.left.is_none() {
+        return node.text.unwrap().chars().collect::<Vec<char>>()[i]; //TODO: this can be better
+    }
+
+    let left = &tree[node.left.unwrap()];
+    if node.weight <= i && node.right.is_some() {
+        let right = &tree[node.right.unwrap()];
+        return index(right, i - node.weight, tree);
+    }
+
+    return index(&left, i, tree);
+}
+
 fn main() {
-    let mut file = File::open("tekst3.txt").unwrap();
+    let mut file = File::open("sheks.txt").unwrap();
 
     let mut file_content = String::with_capacity(1024);
 
@@ -97,55 +113,38 @@ fn main() {
         .expect("Failed to read file");
 
     let tree = build_tree(&file_content);
-    print_tree(&tree[0], &tree, 0);
+    println!("Nodes: {}", tree.len());
+    println!("Char at {} = {}", 5, index(&tree[0], 5, &tree));
 }
 #[cfg(test)]
 mod tests {
-    use crate::build_tree;
+    use crate::{build_tree, index};
 
     #[test]
-
-    fn build_tree_works() {
-        let text = String::from("Igor");
-        let tree = build_tree(&text);
-        assert_eq!(tree[0].text.unwrap(), "Igor");
-        assert_eq!(tree[1].text.unwrap(), "Ig");
-        assert_eq!(tree[2].text.unwrap(), "or");
-        assert_eq!(tree[3].text.unwrap(), "I");
-        assert_eq!(tree[4].text.unwrap(), "g");
-        assert_eq!(tree[5].text.unwrap(), "o");
-        assert_eq!(tree[6].text.unwrap(), "r");
-    }
-    #[test]
-    fn build_tree_works_uneven() {
+    fn index_works_0() {
         let text = String::from("Ciapcio");
         let tree = build_tree(&text);
-        assert_eq!(tree[0].text.unwrap(), "Ciapcio");
-        assert_eq!(tree[1].text.unwrap(), "Cia");
-        assert_eq!(tree[2].text.unwrap(), "pcio");
-        assert_eq!(tree[3].text.unwrap(), "C");
-        assert_eq!(tree[4].text.unwrap(), "ia");
-        assert_eq!(tree[5].text.unwrap(), "pc");
-        assert_eq!(tree[6].text.unwrap(), "io");
-        assert_eq!(tree[7].text.unwrap(), "i");
-        assert_eq!(tree[8].text.unwrap(), "a");
-        assert_eq!(tree[9].text.unwrap(), "p");
-        assert_eq!(tree[10].text.unwrap(), "c");
-        assert_eq!(tree[11].text.unwrap(), "i");
-        assert_eq!(tree[12].text.unwrap(), "o");
-    }
 
+        let char = index(&tree[0], 0, &tree);
+
+        assert_eq!(char, 'C');
+    }
     #[test]
-    fn weight_calculation_works() {
-        let text = String::from("Igor");
+    fn index_works_1() {
+        let text = String::from("Ciapcio");
         let tree = build_tree(&text);
 
-        assert_eq!(tree[0].weight, 2); //Igor
-        assert_eq!(tree[1].weight, 1); //Ig
-        assert_eq!(tree[2].weight, 1); //or
-        assert_eq!(tree[3].weight, 0); //I
-        assert_eq!(tree[4].weight, 0); //g
-        assert_eq!(tree[5].weight, 0); //o
-        assert_eq!(tree[6].weight, 0); //r
+        let char = index(&tree[0], 1, &tree);
+
+        assert_eq!(char, 'i');
+    }
+    #[test]
+    fn index_works_5() {
+        let text = String::from("Ciapcio");
+        let tree = build_tree(&text);
+
+        let char = index(&tree[0], 5, &tree);
+
+        assert_eq!(char, 'i');
     }
 }
