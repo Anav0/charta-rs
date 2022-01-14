@@ -97,6 +97,9 @@ fn main() {
         .expect("Failed to read file");
 
     let tree = build_tree(&file_content);
+    for node in &tree {
+        println!("{:?}", node);
+    }
     print_tree(&tree[0], &tree, 0);
 }
 #[cfg(test)]
@@ -122,11 +125,17 @@ mod tests {
         let tree = build_tree(&text);
         assert_eq!(tree[0].text.unwrap(), "Ciapcio");
         assert_eq!(tree[1].text.unwrap(), "Cia");
-        assert_eq!(tree[2].text.unwrap(), "C");
-        assert_eq!(tree[3].text.unwrap(), "ia");
-        assert_eq!(tree[4].text.unwrap(), "pcio");
+        assert_eq!(tree[2].text.unwrap(), "pcio");
+        assert_eq!(tree[3].text.unwrap(), "C");
+        assert_eq!(tree[4].text.unwrap(), "ia");
         assert_eq!(tree[5].text.unwrap(), "pc");
         assert_eq!(tree[6].text.unwrap(), "io");
+        assert_eq!(tree[7].text.unwrap(), "i");
+        assert_eq!(tree[8].text.unwrap(), "a");
+        assert_eq!(tree[9].text.unwrap(), "p");
+        assert_eq!(tree[10].text.unwrap(), "c");
+        assert_eq!(tree[11].text.unwrap(), "i");
+        assert_eq!(tree[12].text.unwrap(), "o");
     }
 
     #[test]
@@ -134,7 +143,7 @@ mod tests {
         let text = String::from("Igor");
         let tree = build_tree(&text);
 
-        assert_eq!(tree[0].weight, 4); //Igor
+        assert_eq!(tree[0].weight, 2); //Igor
         assert_eq!(tree[1].weight, 1); //Ig
         assert_eq!(tree[2].weight, 1); //or
         assert_eq!(tree[3].weight, 0); //I
