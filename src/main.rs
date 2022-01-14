@@ -6,6 +6,7 @@ struct Node<'a> {
     pub text: Option<&'a str>,
     pub left: Option<usize>,
     pub right: Option<usize>,
+    pub parent: Option<usize>,
 }
 
 fn print_tree(node: &Node, nodes: &Vec<Node>, level: usize) {
@@ -15,7 +16,7 @@ fn print_tree(node: &Node, nodes: &Vec<Node>, level: usize) {
         space += "  ";
     }
 
-    println!("|{}{:?}", space, node.text);
+    println!("|{}{} {}", space, node.weight, node.text.unwrap());
 
     if node.left.is_some() {
         let left = &nodes[node.left.unwrap()];
@@ -33,7 +34,8 @@ fn build_tree<'a>(text: &'a String) -> Vec<Node<'a>> {
         text: Some(text),
         right: None,
         left: None,
-        weight: text.len(),
+        parent: None,
+        weight: 0,
     };
     nodes.push(root);
 
@@ -54,36 +56,30 @@ fn build_tree<'a>(text: &'a String) -> Vec<Node<'a>> {
         let length = nodes.len();
         nodes[index].left = Some(length);
         nodes[index].right = Some(length + 1);
+        nodes[index].weight = split.0.len() + split.1.len();
 
         let left_node = Node {
             left: None,
             right: None,
+            parent: Some(index),
             text: Some(split.0),
-            weight: split.0.len(),
+            weight: 0,
         };
 
-        if left_node.text.is_some() {
-            queque.push_back(nodes.len());
-            nodes.push(left_node);
-        }
+        queque.push_back(nodes.len());
+        nodes.push(left_node);
 
         let right_node = Node {
             left: None,
             right: None,
+            parent: Some(index),
             text: Some(split.1),
-            weight: split.1.len(),
+            weight: 0,
         };
 
-        if right_node.text.is_some() {
-            queque.push_back(nodes.len());
-            nodes.push(right_node);
-        }
+        queque.push_back(nodes.len());
+        nodes.push(right_node);
     }
-    for node in &nodes {
-        println!("{:?}", node);
-    }
-
-    print_tree(&nodes[0], &nodes, 0);
 
     nodes
 }
@@ -97,6 +93,7 @@ fn main() {
         .expect("Failed to read file");
 
     let tree = build_tree(&file_content);
+    print_tree(&tree[0], &tree, 0);
 }
 #[cfg(test)]
 mod tests {
@@ -108,5 +105,37 @@ mod tests {
         let text = String::from("Igor");
         let tree = build_tree(&text);
         assert_eq!(tree[0].text.unwrap(), "Igor");
+        assert_eq!(tree[1].text.unwrap(), "Ig");
+        assert_eq!(tree[2].text.unwrap(), "or");
+        assert_eq!(tree[3].text.unwrap(), "I");
+        assert_eq!(tree[4].text.unwrap(), "g");
+        assert_eq!(tree[5].text.unwrap(), "o");
+        assert_eq!(tree[6].text.unwrap(), "r");
+    }
+    #[test]
+    fn build_tree_works_uneven() {
+        let text = String::from("Ciapcio");
+        let tree = build_tree(&text);
+        assert_eq!(tree[0].text.unwrap(), "Ciapcio");
+        assert_eq!(tree[1].text.unwrap(), "Ciap");
+        assert_eq!(tree[2].text.unwrap(), "cio");
+        assert_eq!(tree[3].text.unwrap(), "Ci");
+        assert_eq!(tree[4].text.unwrap(), "ap");
+        assert_eq!(tree[5].text.unwrap(), "c");
+        assert_eq!(tree[6].text.unwrap(), "io");
+    }
+
+    #[test]
+    fn weight_calculation_works() {
+        let text = String::from("Igor");
+        let tree = build_tree(&text);
+
+        assert_eq!(tree[0].weight, 4); //Igor
+        assert_eq!(tree[1].weight, 1); //Ig
+        assert_eq!(tree[2].weight, 1); //or
+        assert_eq!(tree[3].weight, 0); //I
+        assert_eq!(tree[4].weight, 0); //g
+        assert_eq!(tree[5].weight, 0); //o
+        assert_eq!(tree[6].weight, 0); //r
     }
 }
