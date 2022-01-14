@@ -44,19 +44,23 @@ fn build_tree<'a>(text: &'a String) -> Vec<Node<'a>> {
 
     loop {
         let node_index_queque = queque.pop_front();
+        if node_index_queque.is_none() {
+            break;
+        }
+
         let index = node_index_queque.unwrap();
         let chars = nodes[index].text.unwrap();
 
         let split = chars.split_at(chars.len() / 2);
 
         if split.0 == "" {
-            break;
+            continue;
         }
 
         let length = nodes.len();
         nodes[index].left = Some(length);
         nodes[index].right = Some(length + 1);
-        nodes[index].weight = split.0.len() + split.1.len();
+        nodes[index].weight = split.0.len();
 
         let left_node = Node {
             left: None,
@@ -97,7 +101,7 @@ fn main() {
 }
 #[cfg(test)]
 mod tests {
-    use crate::{build_tree, Node};
+    use crate::build_tree;
 
     #[test]
 
@@ -117,11 +121,11 @@ mod tests {
         let text = String::from("Ciapcio");
         let tree = build_tree(&text);
         assert_eq!(tree[0].text.unwrap(), "Ciapcio");
-        assert_eq!(tree[1].text.unwrap(), "Ciap");
-        assert_eq!(tree[2].text.unwrap(), "cio");
-        assert_eq!(tree[3].text.unwrap(), "Ci");
-        assert_eq!(tree[4].text.unwrap(), "ap");
-        assert_eq!(tree[5].text.unwrap(), "c");
+        assert_eq!(tree[1].text.unwrap(), "Cia");
+        assert_eq!(tree[2].text.unwrap(), "C");
+        assert_eq!(tree[3].text.unwrap(), "ia");
+        assert_eq!(tree[4].text.unwrap(), "pcio");
+        assert_eq!(tree[5].text.unwrap(), "pc");
         assert_eq!(tree[6].text.unwrap(), "io");
     }
 
